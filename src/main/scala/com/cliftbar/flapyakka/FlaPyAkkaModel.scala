@@ -9,7 +9,6 @@ import cliftbar.disastermodeling.hurricane.nws23._
 
 
 class FlaPyAkkaModel {
-  def home
   def CalculateHurricane(trackPoints:Seq[TrackPoint], bBox:BoundingBox, fSpeed_kts:Option[Double], rMax_nmi:Double, pxPerDegree:(Int, Int), maxDist:Int, par:Int = -1):Map[String, String] = {
 
     //println("Start Calculate Hurricane with NWS23")
