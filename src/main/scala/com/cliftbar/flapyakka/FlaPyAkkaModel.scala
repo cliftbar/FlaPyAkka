@@ -7,7 +7,6 @@ import java.time
 import cliftbar.disastermodeling.hurricane.TrackPoint
 import cliftbar.disastermodeling.hurricane.nws23._
 
-
 class FlaPyAkkaModel {
     def CalculateHurricane(trackPoints: Seq[TrackPoint], bBox: BoundingBox, fSpeed_kts: Option[Double], rMax_nmi: Double, pxPerDegree: (Int, Int), maxDist: Int, par: Int = -1): Map[String, String] = {
 

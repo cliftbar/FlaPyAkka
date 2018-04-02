@@ -4,9 +4,12 @@ package com.cliftbar.flapyakka.routes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
+//FlaPyAkka
+import com.cliftbar.flapyakka.FlaPyAkkaModel
+
 object HurricaneRoutes {
     // Routes that this WebServer must handle are defined here
-    def getRoutes(serverId: Int): Route =
+    def getRoutes(serverId: Int, model: FlaPyAkkaModel): Route =
         pathPrefix("hurricane") {
             pathEndOrSingleSlash {
                 get {

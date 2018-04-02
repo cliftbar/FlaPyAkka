@@ -22,21 +22,19 @@ import java.time._
 // FlaPyDisaster application server
 object FlaPyAkkaController extends HttpApp with App {
 
-    val model = new FlaPyAkkaModel
+    var model = new FlaPyAkkaModel
     val serverId = (math.random() * 1000).toInt
     val serverStartTime = LocalDateTime.now(Clock.systemUTC())
 
-    def appRoutes: Route = AppRoutes.getRoutes(serverId, model)
-
-    def hurricaneRoutes: Route = HurricaneRoutes.getRoutes(serverId)
+    def hurricaneRoutes: Route = HurricaneRoutes.getRoutes(serverId, model)
 
     override def routes =
         pathEndOrSingleSlash {
             get {
                 complete("FlaPyAkka Home")
             }
-        }~ pathPrefix("health") { // health check the server, gives some info and such
-            pathPrefix("check") {
+        }~ pathPrefix("server") { // health check the server, gives some info and such
+            pathPrefix("health") {
                 pathEndOrSingleSlash {
                     get { // Listens only to GET requests
                         val respData: JsObject = JsObject(
@@ -50,6 +48,14 @@ object FlaPyAkkaController extends HttpApp with App {
                         }
                     }
                 }
+            } ~ pathPrefix("info"){
+                pathEndOrSingleSlash{
+                    get {
+                        respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
+                            complete("success")
+                        }
+                    }
+                }
             }
         } ~ pathPrefix("app") {
             // reset the application.
@@ -60,6 +66,7 @@ object FlaPyAkkaController extends HttpApp with App {
                             json =>
                                 val parsedJson = JsonParser(json).asJsObject
                                 val resetType: String = parsedJson.fields("resetType").convertTo[String]
+                                this.model = new FlaPyAkkaModel
                                 respondWithHeader(RawHeader("server id", this.serverId.toString))
                                 complete("success")
                         }
