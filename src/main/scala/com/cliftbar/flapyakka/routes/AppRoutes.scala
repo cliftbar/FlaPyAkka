@@ -4,6 +4,7 @@ package com.cliftbar.flapyakka.routes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Route
+import com.cliftbar.flapyakka.models.FlaPyAkkaModel
 
 // JSON
 import spray.json.JsonParser
@@ -11,8 +12,6 @@ import spray.json.DefaultJsonProtocol._
 
 // Java
 import java.time.LocalDateTime
-
-import com.cliftbar.flapyakka.FlaPyAkkaModel
 
 object AppRoutes {
     // Routes that this WebServer must handle are defined here

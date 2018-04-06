@@ -44,11 +44,13 @@ class UserStore {
     private def initUsers(): Unit ={
         val userDir = new File(this.userDir)
         for (fi <- userDir.listFiles){
-            val user = new User()
-            user.loadConfig(fi.getPath)
-            this.userIds = this.userIds :+ user
-            this.userNames.put(user.username, user.id)
-            println(s"loading user: ${user.username}")
+            if (fi.isDirectory) {
+                val user = new User()
+                user.loadConfig(fi.getPath)
+                this.userIds = this.userIds :+ user
+                this.userNames.put(user.username, user.id)
+                println(s"loading user: ${user.username}")
+            }
         }
     }
     def validateUser(id: Int): Boolean = {

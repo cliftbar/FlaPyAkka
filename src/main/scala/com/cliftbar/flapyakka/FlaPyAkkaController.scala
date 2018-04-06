@@ -1,6 +1,7 @@
 package com.cliftbar.flapyakka
 
 // Akka
+import com.cliftbar.flapyakka.models.FlaPyAkkaModel
 import com.cliftbar.flapyakka.routes._
 import com.cliftbar.flapyakka.routes.UserValidator
 

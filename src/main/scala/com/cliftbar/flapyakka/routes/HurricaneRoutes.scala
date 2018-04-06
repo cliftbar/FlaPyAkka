@@ -4,10 +4,10 @@ package com.cliftbar.flapyakka.routes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.cliftbar.flapyakka.FlaPyAkkaController.{extractRequestContext, validate}
+import com.cliftbar.flapyakka.models.FlaPyAkkaModel
 
 //FlaPyAkka
-import com.cliftbar.flapyakka.FlaPyAkkaModel
-import com.cliftbar.flapyakka.routes.UserValidator
+//import com.cliftbar.flapyakka.routes.UserValidator
 
 object HurricaneRoutes {
     // Routes that this WebServer must handle are defined here

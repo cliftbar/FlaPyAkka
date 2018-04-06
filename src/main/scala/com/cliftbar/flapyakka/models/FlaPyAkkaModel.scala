@@ -1,8 +1,6 @@
-package com.cliftbar.flapyakka
+package com.cliftbar.flapyakka.models
 
-import java.io.FileWriter
 import java.nio.file.Paths
-import java.time
 
 // FlapyDisaster
 import cliftbar.disastermodeling.hurricane.TrackPoint
@@ -24,7 +22,7 @@ class FlaPyAkkaModel {
         users.printUsers()
     }
 
-
+    // old
     def CalculateHurricane(trackPoints: Seq[TrackPoint], bBox: BoundingBox, fSpeed_kts: Option[Double], rMax_nmi: Double, pxPerDegree: (Int, Int), maxDist: Int, par: Int = -1): Map[String, String] = {
 
         //println("Start Calculate Hurricane with NWS23")
