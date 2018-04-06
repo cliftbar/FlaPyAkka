@@ -1,6 +1,8 @@
 package com.cliftbar.flapyakka
 
+// Akka
 import com.cliftbar.flapyakka.routes._
+import com.cliftbar.flapyakka.routes.UserValidator
 
 // Typesafe Config
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions, ConfigValueFactory, ConfigValue, _}
@@ -33,7 +35,57 @@ object FlaPyAkkaController extends HttpApp with App {
             get {
                 complete("FlaPyAkka Home")
             }
-        }~ pathPrefix("server") { // health check the server, gives some info and such
+        } ~ pathPrefix("auth") {
+            pathPrefix("login") {
+                pathEndOrSingleSlash {
+                    post {
+                        entity(as[String]) {
+                            json =>
+                                val parsedJson = JsonParser(json).asJsObject
+                                val username: String = parsedJson.fields("username").convertTo[String]
+
+                                val respData: JsObject = JsObject(
+                                    "id" -> JsNumber(-1)
+                                )
+
+                                val respEntity: HttpEntity.Strict = HttpEntity(MediaTypes.`application/json`, respData.toString())
+                                respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
+                                    complete(respEntity)
+                                }
+                        }
+                    }
+                }
+            } ~ pathPrefix("create-user") {
+                pathEndOrSingleSlash {
+                    post {
+                        entity(as[String]) {
+                            json =>
+                                val parsedJson = JsonParser(json).asJsObject
+                                val username: String = parsedJson.fields("username").convertTo[String]
+
+                                val id = model.addUser(username)
+                                val respData: JsObject = JsObject(
+                                    "id" -> JsNumber(id)
+                                )
+
+                                val respEntity: HttpEntity.Strict = HttpEntity(MediaTypes.`application/json`, respData.toString())
+                                respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
+                                    complete(respEntity)
+                                }
+                        }
+                    }
+                }
+            } ~ pathPrefix("list-users") {
+                pathEndOrSingleSlash {
+                    get {
+                        model.printUsers()
+                        respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
+                            complete("success")
+                        }
+                    }
+                }
+            }
+        } ~ pathPrefix("server") { // health check the server, gives some info and such
             pathPrefix("health") {
                 pathEndOrSingleSlash {
                     get { // Listens only to GET requests
@@ -48,8 +100,8 @@ object FlaPyAkkaController extends HttpApp with App {
                         }
                     }
                 }
-            } ~ pathPrefix("info"){
-                pathEndOrSingleSlash{
+            } ~ pathPrefix("info") {
+                pathEndOrSingleSlash {
                     get {
                         respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
                             complete("success")
@@ -58,55 +110,44 @@ object FlaPyAkkaController extends HttpApp with App {
                 }
             }
         } ~ pathPrefix("app") {
-            entity(as[String]){
-                json =>
-                    val id: Int = if (json.length > 0) {
-                        val parsedJson = JsonParser(json).asJsObject
-                        parsedJson.fields("id").convertTo[Int]
-                    } else {
-                        -1
-                    }
-                    validate(model.validateUser(id), "Invalid User") {
-                        pathPrefix("test"){
-                            complete("test")
-                        } ~ pathPrefix("reset") { // reset the application.
-                            pathEndOrSingleSlash {
-                                post {
-                                    entity(as[String]) {
-                                        json =>
-                                            val parsedJson = JsonParser(json).asJsObject
-                                            val resetType: String = parsedJson.fields("resetType").convertTo[String]
-                                            this.model = new FlaPyAkkaModel
-                                            respondWithHeader(RawHeader("server id", this.serverId.toString))
-                                            complete("success")
-                                    }
-                                }
-                            }
-                        } ~ pathPrefix("login") {
-                            pathEndOrSingleSlash {
-                                post {
-                                    entity(as[String]) {
-                                        json =>
-                                            val parsedJson = JsonParser(json).asJsObject
-                                            val username: String = parsedJson.fields("username").convertTo[String]
-
-                                            val respData: JsObject = JsObject(
-                                                "id" -> JsNumber(-1)
-                                            )
-
-                                            val respEntity: HttpEntity.Strict = HttpEntity(MediaTypes.`application/json`, respData.toString())
-                                            respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
-                                                complete(respEntity)
-                                            }
-                                    }
+            extractRequestContext { ctx =>
+                val valid = UserValidator.validateUser(ctx.request.headers, this.model)
+                println(valid)
+                validate(valid, "Invalid User") {
+                    pathPrefix("reset") { // reset the application.
+                        pathEndOrSingleSlash {
+                            post {
+                                entity(as[String]) {
+                                    json =>
+                                        val parsedJson = JsonParser(json).asJsObject
+                                        val resetType: String = parsedJson.fields("resetType").convertTo[String]
+                                        this.model = new FlaPyAkkaModel
+                                        respondWithHeader(RawHeader("server id", this.serverId.toString))
+                                        complete("success")
                                 }
                             }
                         }
                     }
+                }
+                //            }
+            }
+        } ~ pathPrefix("dev"){
+            extractRequestContext { ctx =>
+                val valid = UserValidator.validateUser(ctx.request.headers, this.model)
+                println(valid)
+                validate(valid, "Invalid User") {
+                    pathPrefix("test") {
+                        pathEndOrSingleSlash {
+                            get {
+                                complete("test")
+                            }
+                        }
+                    }
+                }
             }
         } ~ hurricaneRoutes
 
-    // This will start the server until the return key is pressed
+// This will start the server until the return key is pressed
 
 //    var conf = ConfigFactory.empty()
 //    conf = conf.withValue("test", ConfigValueFactory.fromAnyRef(1))
@@ -117,10 +158,9 @@ object FlaPyAkkaController extends HttpApp with App {
 //    fi.write(conf.root().render(ConfigRenderOptions.defaults().setOriginComments(false)))
 //    fi.close
 
-    val httpConfig = ConfigFactory.load().getConfig("akka.http")
-    val interface = httpConfig.getString("server.interface")
-    val port = httpConfig.getInt("server.port")
-    println("ServerID " + serverId.toString + " at " + interface.toString + ":" + port.toString)
-    println(routes)
-    startServer(interface, port)
+val httpConfig = ConfigFactory.load().getConfig ("akka.http")
+val interface = httpConfig.getString ("server.interface")
+val port = httpConfig.getInt ("server.port")
+println ("ServerID " + serverId.toString + " at " + interface.toString + ":" + port.toString)
+startServer (interface, port)
 }

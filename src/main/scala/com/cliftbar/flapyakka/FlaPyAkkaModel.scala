@@ -16,6 +16,15 @@ class FlaPyAkkaModel {
         return users.validateUser(id)
     }
 
+    def addUser(username: String): Int ={
+        return users.addUser(username)
+    }
+
+    def printUsers(): Unit ={
+        users.printUsers()
+    }
+
+
     def CalculateHurricane(trackPoints: Seq[TrackPoint], bBox: BoundingBox, fSpeed_kts: Option[Double], rMax_nmi: Double, pxPerDegree: (Int, Int), maxDist: Int, par: Int = -1): Map[String, String] = {
 
         //println("Start Calculate Hurricane with NWS23")
