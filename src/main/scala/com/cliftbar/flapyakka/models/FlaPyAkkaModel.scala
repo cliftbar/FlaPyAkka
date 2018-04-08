@@ -9,8 +9,9 @@ import com.cliftbar.flapyakka.app.UserStore
 
 class FlaPyAkkaModel {
     val users = new UserStore
+    val hurricaneModel = new HurricaneModel(this)
 
-    def validateUser(id: Int): Boolean ={
+    def validateUser(id: Int): Option[Int] ={
         return users.validateUser(id)
     }
 

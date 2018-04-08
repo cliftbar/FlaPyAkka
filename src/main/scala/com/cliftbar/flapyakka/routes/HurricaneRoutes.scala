@@ -5,6 +5,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.cliftbar.flapyakka.FlaPyAkkaController.{extractRequestContext, validate}
 import com.cliftbar.flapyakka.models.FlaPyAkkaModel
+import spray.json.JsonParser
+import spray.json.DefaultJsonProtocol._
 
 //FlaPyAkka
 //import com.cliftbar.flapyakka.routes.UserValidator
@@ -15,7 +17,8 @@ object HurricaneRoutes {
         pathPrefix("hurricane") {
             extractRequestContext { ctx =>
                 val valid = UserValidator.validateUser(ctx.request.headers, model)
-                validate(valid, "Invalid User") {
+                validate(valid.nonEmpty, "Invalid User") {
+                    val userId = valid.get
                     pathEndOrSingleSlash {
                         get {
                             complete("hello hurricane")
@@ -25,7 +28,13 @@ object HurricaneRoutes {
                             get {
                                 complete("success")
                             } ~ post {
-                                complete("success")
+                                entity(as[String]) {
+                                    json =>
+                                        val parsedJson = JsonParser(json).asJsObject
+                                        val catalogName: String = parsedJson.fields("catalogName").convertTo[String]
+                                        model.hurricaneModel.createCatalog(userId, catalogName)
+                                        complete("success")
+                                }
                             } ~ delete {
                                 complete("success")
                             }

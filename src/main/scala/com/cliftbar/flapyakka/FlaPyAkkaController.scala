@@ -114,7 +114,7 @@ object FlaPyAkkaController extends HttpApp with App {
             extractRequestContext { ctx =>
                 val valid = UserValidator.validateUser(ctx.request.headers, this.model)
                 println(valid)
-                validate(valid, "Invalid User") {
+                validate(valid.nonEmpty, "Invalid User") {
                     pathPrefix("reset") { // reset the application.
                         pathEndOrSingleSlash {
                             post {
@@ -136,7 +136,7 @@ object FlaPyAkkaController extends HttpApp with App {
             extractRequestContext { ctx =>
                 val valid = UserValidator.validateUser(ctx.request.headers, this.model)
                 println(valid)
-                validate(valid, "Invalid User") {
+                validate(valid.nonEmpty, "Invalid User") {
                     pathPrefix("test") {
                         pathEndOrSingleSlash {
                             get {
