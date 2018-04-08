@@ -8,7 +8,7 @@ import cliftbar.disastermodeling.hurricane.nws23._
 import com.cliftbar.flapyakka.app.UserStore
 
 class FlaPyAkkaModel {
-    val users = new UserStore
+    val users = UserStore
     val hurricaneModel = new HurricaneModel(this)
 
     def validateUser(id: Int): Option[Int] ={
