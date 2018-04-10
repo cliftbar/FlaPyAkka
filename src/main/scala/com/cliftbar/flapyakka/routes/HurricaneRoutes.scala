@@ -8,6 +8,8 @@ import com.cliftbar.flapyakka.models.FlaPyAkkaModel
 import spray.json.JsonParser
 import spray.json.DefaultJsonProtocol._
 
+import scala.io.Source.fromURL
+
 //FlaPyAkka
 //import com.cliftbar.flapyakka.routes.UserValidator
 
@@ -46,14 +48,26 @@ object HurricaneRoutes {
                             complete("success")
                         }
                     } ~ pathPrefix("event") {
-                        pathEndOrSingleSlash {
-                            get {
-                                complete("success")
-                            } ~ post {
-                                complete("success")
-                            } ~ delete {
-                                complete("success")
+                        pathPrefix("unisys") {
+                            pathEndOrSingleSlash {
+                                post {
+                                    entity(as[String]) {
+                                        json =>
+                                            println("test")
+                                            val parsedJson = JsonParser(json).asJsObject
+                                            val eventName: String = parsedJson.fields("eventName").convertTo[String]
+                                            val unisysUrl: String = parsedJson.fields("unisysUrl").convertTo[String]
+
+                                            val unisysFileLines: Seq[String] = fromURL(unisysUrl).mkString.split('\n').toSeq
+                                            model.hurricaneModel.buildFromUnysis(userId, eventName, unisysFileLines)
+                                            complete("unisys success")
+                                    }
+                                }
                             }
+                        } ~ pathPrefix("from-saved") {
+                            complete("success")
+                        } ~ pathPrefix("hurdat") {
+                            complete("success")
                         } ~ pathPrefix("track") {
                             pathEndOrSingleSlash {
                                 get {

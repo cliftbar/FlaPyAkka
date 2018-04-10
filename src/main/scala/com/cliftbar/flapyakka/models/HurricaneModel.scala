@@ -1,8 +1,10 @@
 package com.cliftbar.flapyakka.models
 
-import com.cliftbar.flapyakka.hurricane.Catalog
+import com.cliftbar.flapyakka.hurricane.{Catalog, Event}
+import javax.swing.tree.ExpandVetoException
 
 import scala.collection.mutable
+import scala.io.Source.fromURL
 
 class HurricaneModel(model: FlaPyAkkaModel) {
     /*****************************
@@ -43,9 +45,15 @@ class HurricaneModel(model: FlaPyAkkaModel) {
     def saveEventToDisk(userId: Int, eventName: String) {}
 
     // Load event methods
-    def loadUnysisEvent(userId: Int, eventName: String){}
+    def buildFromUnysis(userId: Int, eventName: String, unisysFileLines: Seq[String]): Unit ={
+        val event: Event = Event.buildFromUnisys(unisysFileLines)
+        val saveDir = this.model.users.getUserDir(userId).get
+        event.saveEvent(saveDir)
+    }
 
     def loadFromFile(userId: Int, eventName: String){}
+
+    def buildFromHurdat(userId: Int, eventName: String){}
 
     // Event footprint methods
     def calculateEventFootprint(userId: Int, eventName: String){}

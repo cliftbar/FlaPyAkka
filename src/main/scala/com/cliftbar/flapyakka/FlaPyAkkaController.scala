@@ -28,7 +28,7 @@ object FlaPyAkkaController extends HttpApp with App {
     var model = new FlaPyAkkaModel
     val serverId = (math.random() * 1000).toInt
     val serverStartTime = LocalDateTime.now(Clock.systemUTC())
-
+    val serverTempDir: String = ConfigFactory.load().getConfig("app").getString("tempDir")
     def hurricaneRoutes: Route = HurricaneRoutes.getRoutes(serverId, model)
 
     override def routes =

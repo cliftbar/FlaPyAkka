@@ -121,6 +121,15 @@ object UserStore {
         }).filter(x => x._1 == id)(0)._2
         return username
     }
+
+    def getUserDir(userId: Int): Option[String] = {
+        val ret: Option[String] = if (validateUser(userId).nonEmpty){
+            Some(this.userDir + this.getUsername(userId))
+        } else {
+            None
+        }
+        return ret
+    }
 //
 //    def getUser(id: Int): Option[User] = {
 //        val ret: Option[User] = if (this.validateUser(id).nonEmpty){
