@@ -5,21 +5,21 @@ import java.time.format.DateTimeFormatter
 
 class TrackPoint(
     val timestamp: LocalDateTime
-    ,var latY_deg: Float
-    ,var lonX_deg: Float
+    ,var latY_deg: Double
+    ,var lonX_deg: Double
     ,val maxWindSpeed_kts: Int
-    ,val minCentralPressure_mb: Option[Float]
+    ,val minCentralPressure_mb: Option[Double]
     ,var sequence: Int
     ,var forwardSpeed_kts: Int
-    ,var headingToNextPoint: Option[Float] = None
+    ,var headingToNextPoint: Option[Double] = None
     ,var isInterpolated: Boolean = false
     ,var isLandfall: Boolean = false
 ) {
-    def pointToXyz(): (Float, Float, Int) ={
+    def pointToXyz(): (Double, Double, Int) ={
         val xy = this.pointLatLon()
         return (xy._1, xy._2, this.maxWindSpeed_kts)
     }
-    def pointLatLon(): (Float, Float) ={
+    def pointLatLon(): (Double, Double) ={
         return (this.latY_deg, this.lonX_deg)
     }
     def pointAsGeojson(){}
@@ -29,9 +29,9 @@ class TrackPoint(
             ,pointLatLon()._1
             ,pointLatLon()._2
             ,maxWindSpeed_kts
-            ,minCentralPressure_mb.getOrElse(Float.NaN)
+            ,minCentralPressure_mb.getOrElse(Double.NaN)
             ,forwardSpeed_kts
-            ,headingToNextPoint.getOrElse(Float.NaN)
+            ,headingToNextPoint.getOrElse(Double.NaN)
             ,if (this.isLandfall) 1 else 0
             ,sequence
         )
@@ -40,13 +40,13 @@ class TrackPoint(
 
 class HurdatTrackPoint(
     override val timestamp: LocalDateTime
-    ,latY_deg: Float
-    ,lonX_deg: Float
+    ,latY_deg: Double
+    ,lonX_deg: Double
     ,maxWindSpeed_kts: Int
-    ,minCentralPressure_mb: Option[Float]
+    ,minCentralPressure_mb: Option[Double]
     ,sequence: Int
     ,forwardSpeed_kts: Int
-    ,headingToNextPoint: Float
+    ,headingToNextPoint: Double
     ,recordIdentifier: String
     ,status: String
     ,hemisphere_ns: String
@@ -66,10 +66,10 @@ class HurdatTrackPoint(
     ,isInterpolated: Boolean = false
 ) extends TrackPoint(
     timestamp: LocalDateTime
-    ,latY_deg: Float
-    ,lonX_deg: Float
+    ,latY_deg: Double
+    ,lonX_deg: Double
     ,maxWindSpeed_kts: Int
-    ,minCentralPressure_mb: Option[Float]
+    ,minCentralPressure_mb: Option[Double]
     ,forwardSpeed_kts: Int
     ,sequence: Int
 ) {
@@ -80,7 +80,7 @@ class HurdatTrackPoint(
     val minute: Int = timestamp.getMinute
     isLandfall = this.recordIdentifier == 'L'
 
-    override def pointLatLon(): (Float, Float) = {
+    override def pointLatLon(): (Double, Double) = {
         val lat = if (this.hemisphere_ns == 'S') {
             math.abs(this.latY_deg) * -1
         } else {

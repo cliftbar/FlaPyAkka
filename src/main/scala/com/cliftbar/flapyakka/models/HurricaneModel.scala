@@ -1,7 +1,8 @@
 package com.cliftbar.flapyakka.models
 
+import java.nio.file.{Files, Path, Paths}
+
 import com.cliftbar.flapyakka.hurricane.{Catalog, Event}
-import javax.swing.tree.ExpandVetoException
 
 import scala.collection.mutable
 import scala.io.Source.fromURL
@@ -47,11 +48,24 @@ class HurricaneModel(model: FlaPyAkkaModel) {
     // Load event methods
     def buildFromUnysis(userId: Int, eventName: String, unisysFileLines: Seq[String]): Unit ={
         val event: Event = Event.buildFromUnisys(unisysFileLines)
-        val saveDir = this.model.users.getUserDir(userId).get
-        event.saveEvent(saveDir)
+        val saveDir = this.model.users.getUserDir(userId)
+        if (saveDir.nonEmpty) {
+            event.saveEvent(saveDir.toString)
+        }
     }
 
-    def loadFromFile(userId: Int, eventName: String){}
+    def loadFromFile(userId: Int, eventName: String): Unit ={
+        val testEvent = Event.buildFromSaveEvent("users/xcb/events/MATTHEW_2016/MATTHEW_2016_EventData.conf")
+        val test = "test"
+    }
+
+    def getEventConfigFile(userId: Int, eventName: String): Option[Path] = {
+        val userName = this.model.users.getUsername(userId)
+        val testPath = Paths.get(this.model.users.userDir, userName, "events", eventName, eventName + "_EventData.conf")
+        val fiExists = Files.exists(testPath)
+
+        return if (fiExists) Some(testPath) else None
+    }
 
     def buildFromHurdat(userId: Int, eventName: String){}
 

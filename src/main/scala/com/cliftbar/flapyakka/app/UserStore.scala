@@ -19,8 +19,8 @@ class User(){
     var username = ""
     def loadConfig(configDir: String): Unit ={
         val username: String = Paths.get(configDir).getFileName.toString
-        val conf_fi = new File(configDir + File.separator + username + ".conf")
-        val conf = ConfigFactory.parseFile(conf_fi)
+        val confFi = new File(configDir + File.separator + username + ".conf")
+        val conf = ConfigFactory.parseFile(confFi)
         this.id = conf.getInt("user.id")
         this.username = conf.getString("user.username")
     }
@@ -69,11 +69,13 @@ object UserStore {
             user.loadConfig(this.userDir + x.getName)
             user.id
         })
-        val valid = if (ids.contains(id)){
-            Some(id)
-        } else {
-            None
-        }
+
+        val valid = ids.find(x => id == x)
+//        val valid = if (ids.contains(id)){
+//            Some(id)
+//        } else {
+//            None
+//        }
 
         return valid
     }
@@ -81,7 +83,7 @@ object UserStore {
     def addUser(username: String): Int = {
         val id = if (!this.isUser(username)) {
             val userDir = new File(this.userDir)
-            val newId = userDir.listFiles().filter(x => x.isDirectory).length
+            val newId = userDir.listFiles().count(x => x.isDirectory)//.filter(x => x.isDirectory).length
             val u = new User()
             u.id = newId
             u.username = username
