@@ -1,9 +1,14 @@
 package com.cliftbar.flapyakka
 
 // Akka
+import akka.http.scaladsl.model.HttpHeader
+import akka.http.scaladsl.server.RouteResult
+import akka.http.scaladsl.server.directives.LogEntry
 import com.cliftbar.flapyakka.models.FlaPyAkkaModel
 import com.cliftbar.flapyakka.routes._
 import com.cliftbar.flapyakka.routes.UserValidator
+
+import scala.util.Try
 
 // Typesafe Config
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions, ConfigValueFactory, ConfigValue, _}
@@ -147,6 +152,27 @@ object FlaPyAkkaController extends HttpApp with App {
                 }
             }
         } ~ hurricaneRoutes
+
+    /**Produces a log entry for every RouteResult. The log entry includes the request URI */
+    def logAccess(innerRoute: Route, userId: Option[Int]): Route = {
+        def toLogEntry(marker: String, f: Any => String) = (r: Any) => LogEntry(marker + f(r), akka.event.Logging.InfoLevel)
+        extractRequest { request =>
+            val id: String = userId.flatMap(s => Try(s.toString).toOption).getOrElse("unauthorized")
+            logResult(toLogEntry(s"${id} ${request.method.name} ${request.uri} ==> ", {
+                case c: RouteResult.Complete => c.response.status.toString()
+                case x => s"unknown response part of type ${x.getClass}"
+            }))
+            return innerRoute
+        }
+    }
+
+    def routingValidateAccess(innerRoute: Route): Route = {
+        extractRequestContext { ctx =>
+            val userIDheader: Seq[HttpHeader] = ctx.request.headers.filter(x => x.name() == "user-id")
+            val userId: Option[Int] = this.model.validateUser(userIDheader(0).value.toInt)
+            return logAccess(innerRoute, userId)
+        }
+    }
 
 // This will start the server until the return key is pressed
 

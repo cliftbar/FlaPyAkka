@@ -19,6 +19,7 @@ object Event{
     val modelHeaders = Seq("identifier", "name", "timestamp", "latY_deg", "lonX_deg", "maxWind_kts", "minCp_mb", "fspeed_kts", "heading", "is_landfall_point", "sequence", "rmax_nmi", "gwaf")
 
     def buildFromHurdat(){}
+
     def buildFromUnisys(unisysFileLines: Seq[String], eventIdentifier: Option[String] = None): Event ={
         val year: Int = unisysFileLines(0).trim.split(' ').last.toInt
         val name: String = eventIdentifier.getOrElse(unisysFileLines(1).trim.split(' ').last.toString)
@@ -28,6 +29,7 @@ object Event{
 
         new Event(identifier, name, year, tps)
     }
+
     private def parseUnisysRow(year: Int, row: String, sequence: Int, fSpeed_kts: Int = 15): TrackPoint = {
         val splitRow: Seq[String] = row.trim.split("\\s+").map(x => x.trim)
         val latY: Double = splitRow(1).toDouble
@@ -41,6 +43,7 @@ object Event{
 
         new TrackPoint(time, latY, lonX, maxWind, minCp, fSpeed_kts, sequence)
     }
+
     def buildFromSaveEvent(confFileUri: String): Unit ={
         val confFi = new File(confFileUri)
         val conf = ConfigFactory.parseFile(confFi)

@@ -38,7 +38,16 @@ object HurricaneRoutes {
                                 complete("success")
                             }
                         } ~ pathPrefix("add-event") {
-                            complete("success")
+                            entity(as[String]) {
+                                json =>
+                                    println("test")
+                                    val parsedJson = JsonParser(json).asJsObject
+                                    val catalogName: String = parsedJson.fields("catalogName").convertTo[String]
+                                    val eventName: String = parsedJson.fields("eventName").convertTo[String]
+
+                                    model.hurricaneModel.addEventToCatalog(userId, catalogName, eventName)
+                                    complete("unisys success")
+                            }
                         } ~ pathPrefix("remove-event") {
                             complete("success")
                         } ~ pathPrefix("get-event-names") {

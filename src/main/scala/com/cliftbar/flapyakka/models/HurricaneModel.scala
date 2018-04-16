@@ -4,9 +4,6 @@ import java.nio.file.{Files, Path, Paths}
 
 import com.cliftbar.flapyakka.hurricane.{Catalog, Event}
 
-import scala.collection.mutable
-import scala.io.Source.fromURL
-
 class HurricaneModel(model: FlaPyAkkaModel) {
     /*****************************
     ** Hurricane Config Methods **
@@ -30,11 +27,25 @@ class HurricaneModel(model: FlaPyAkkaModel) {
 
     def deleteCatalog(userId: Int){}
 
-    def addEventToCatalog(userId: Int, catalogName: String, eventName: String){}
+    def addEventToCatalog(userId: Int, catalogName: String, eventName: String): Unit ={
+
+    }
 
     def getEventNamesInCatalog(userId: Int){}
 
     def saveCatalog(userId: Int){}
+
+    def getUserCatalogs(userId: Int): Seq[String] = {
+        val userName = this.model.users.getUsername(userId)
+        val catalogPath = Paths.get(this.model.users.userDir, userName, "catalogs")
+        Catalog.getUserCatalogs(catalogPath)
+    }
+
+    def getCatalogEvents(userId: Int, catalogName: String): Seq[String] = {
+        val userName = this.model.users.getUsername(userId)
+        val catalogPath = Paths.get(this.model.users.userDir, userName, "catalogs", catalogName, catalogName + ".conf")
+        return Catalog.getCatalogEvents(catalogPath)
+    }
 
     def getCatalogStats(userId: Int){}
 
