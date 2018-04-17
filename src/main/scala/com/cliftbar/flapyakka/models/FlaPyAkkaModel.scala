@@ -11,7 +11,7 @@ class FlaPyAkkaModel {
     val users = UserStore
     val hurricaneModel = new HurricaneModel(this)
 
-    def validateUser(id: Int): Option[Int] ={
+    def validateUser(id: Option[Int]): Option[Int] ={
         return users.validateUser(id)
     }
 

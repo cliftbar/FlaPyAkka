@@ -1,7 +1,8 @@
 package com.cliftbar.flapyakka
 
 // Akka
-import akka.http.scaladsl.model.HttpHeader
+import akka.actor.ActorLogging
+import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
 import akka.http.scaladsl.server.RouteResult
 import akka.http.scaladsl.server.directives.LogEntry
 import com.cliftbar.flapyakka.models.FlaPyAkkaModel
@@ -36,7 +37,9 @@ object FlaPyAkkaController extends HttpApp with App {
     val serverTempDir: String = ConfigFactory.load().getConfig("app").getString("tempDir")
     def hurricaneRoutes: Route = HurricaneRoutes.getRoutes(serverId, model)
 
-    override def routes =
+
+    override def routes: Route = optionalHeaderValueByName("user-id") { userIdHeader =>
+      val userId: Option[Int] = Try(userIdHeader.get.toInt).toOption
         pathEndOrSingleSlash {
             get {
                 complete("FlaPyAkka Home")
@@ -82,11 +85,13 @@ object FlaPyAkkaController extends HttpApp with App {
                     }
                 }
             } ~ pathPrefix("list-users") {
-                pathEndOrSingleSlash {
-                    get {
-                        model.printUsers()
-                        respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
-                            complete("success")
+                authorize(this.model.validateUser(userId).nonEmpty) {
+                    pathEndOrSingleSlash {
+                        get {
+                            model.printUsers()
+                            respondWithHeaders(RawHeader("server_id", this.serverId.toString)) {
+                                complete("success")
+                            }
                         }
                     }
                 }
@@ -116,63 +121,49 @@ object FlaPyAkkaController extends HttpApp with App {
                 }
             }
         } ~ pathPrefix("app") {
-            extractRequestContext { ctx =>
-                val valid = UserValidator.validateUser(ctx.request.headers, this.model)
-                println(valid)
-                validate(valid.nonEmpty, "Invalid User") {
-                    pathPrefix("reset") { // reset the application.
-                        pathEndOrSingleSlash {
-                            post {
-                                entity(as[String]) {
-                                    json =>
-                                        val parsedJson = JsonParser(json).asJsObject
-                                        val resetType: String = parsedJson.fields("resetType").convertTo[String]
-                                        this.model = new FlaPyAkkaModel
-                                        respondWithHeader(RawHeader("server id", this.serverId.toString))
-                                        complete("success")
-                                }
-                            }
-                        }
-                    }
-                }
-                //            }
-            }
-        } ~ pathPrefix("dev"){
-            extractRequestContext { ctx =>
-                val valid = UserValidator.validateUser(ctx.request.headers, this.model)
-                println(valid)
-                validate(valid.nonEmpty, "Invalid User") {
-                    pathPrefix("test") {
-                        pathEndOrSingleSlash {
-                            get {
-                                complete("test")
+            authorize(this.model.validateUser(userId).nonEmpty) {
+                pathPrefix("reset") { // reset the application.
+                    pathEndOrSingleSlash {
+                        post {
+                            entity(as[String]) {
+                                json =>
+                                    val parsedJson = JsonParser(json).asJsObject
+                                    val resetType: String = parsedJson.fields("resetType").convertTo[String]
+                                    this.model = new FlaPyAkkaModel
+                                    respondWithHeader(RawHeader("server id", this.serverId.toString))
+                                    complete("success")
                             }
                         }
                     }
                 }
             }
-        } ~ hurricaneRoutes
+        } ~ pathPrefix("dev") {
+            authorize(this.model.validateUser(userId).nonEmpty) {
+                pathPrefix("test") {
+                    pathEndOrSingleSlash {
+                        get {
+                            complete("test")
+                        }
+                    }
+                }
+            }
+        }
+    } ~ hurricaneRoutes
 
     /**Produces a log entry for every RouteResult. The log entry includes the request URI */
-    def logAccess(innerRoute: Route, userId: Option[Int]): Route = {
-        def toLogEntry(marker: String, f: Any => String) = (r: Any) => LogEntry(marker + f(r), akka.event.Logging.InfoLevel)
-        extractRequest { request =>
-            val id: String = userId.flatMap(s => Try(s.toString).toOption).getOrElse("unauthorized")
-            logResult(toLogEntry(s"${id} ${request.method.name} ${request.uri} ==> ", {
-                case c: RouteResult.Complete => c.response.status.toString()
-                case x => s"unknown response part of type ${x.getClass}"
-            }))
-            return innerRoute
-        }
-    }
 
-    def routingValidateAccess(innerRoute: Route): Route = {
-        extractRequestContext { ctx =>
-            val userIDheader: Seq[HttpHeader] = ctx.request.headers.filter(x => x.name() == "user-id")
-            val userId: Option[Int] = this.model.validateUser(userIDheader(0).value.toInt)
-            return logAccess(innerRoute, userId)
-        }
-    }
+//    def routingValidateAccess(userId: Option[String]): Boolean = {
+//        val checkVal: Option[Int] = Try(userId.get.toInt).toOption
+//        val check = if (checkVal.isEmpty) {
+//            false
+//        } else {
+//            this.model.validateUser(checkVal.get).nonEmpty
+//        }
+//        return check
+//    }
+
+    //val compoundRoute: Route = this.appRoutes ~ this.hurricaneRoutes
+    //override def routes = routingValidateAccess(compoundRoute)
 
 // This will start the server until the return key is pressed
 

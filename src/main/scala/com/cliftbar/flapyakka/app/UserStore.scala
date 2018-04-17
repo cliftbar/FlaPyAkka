@@ -60,24 +60,23 @@ object UserStore {
 //            }
 //        }
 //    }
-    def validateUser(id: Int): Option[Int] = {
-        val userDir = new File(this.userDir)
-        val userFiles = userDir.listFiles().filter(x => x.isDirectory)
+    def validateUser(id: Option[Int]): Option[Int] = {
+        val ret = if (id.nonEmpty) {
+            val userDir = new File(this.userDir)
+            val userFiles = userDir.listFiles().filter(x => x.isDirectory)
 
-        val ids: Seq[Int] = userFiles.map({ x =>
-            val user = new User
-            user.loadConfig(this.userDir + x.getName)
-            user.id
-        })
+            val ids: Seq[Int] = userFiles.map({ x =>
+                val user = new User
+                user.loadConfig(this.userDir + x.getName)
+                user.id
+            })
 
-        val valid = ids.find(x => id == x)
-//        val valid = if (ids.contains(id)){
-//            Some(id)
-//        } else {
-//            None
-//        }
+            ids.find(x => id.get == x)
+        } else {
+            None
+        }
 
-        return valid
+        return ret
     }
 
     def addUser(username: String): Int = {
@@ -125,7 +124,7 @@ object UserStore {
     }
 
     def getUserDir(userId: Int): Option[String] = {
-        val ret: Option[String] = if (validateUser(userId).nonEmpty){
+        val ret: Option[String] = if (validateUser(Some(userId)).nonEmpty){
             Some(this.userDir + this.getUsername(userId))
         } else {
             None

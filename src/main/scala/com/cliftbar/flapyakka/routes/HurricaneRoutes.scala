@@ -3,21 +3,21 @@ package com.cliftbar.flapyakka.routes
 // Akka
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.cliftbar.flapyakka.FlaPyAkkaController.{extractRequestContext, validate}
+import com.cliftbar.flapyakka.FlaPyAkkaController.{authorize, extractRequestContext, optionalHeaderValueByName, validate}
 import com.cliftbar.flapyakka.models.FlaPyAkkaModel
 import spray.json.JsonParser
 import spray.json.DefaultJsonProtocol._
 
 import scala.io.Source.fromURL
+import scala.util.Try
 
 object HurricaneRoutes {
     // Routes that this WebServer must handle are defined here
     def getRoutes(serverId: Int, model: FlaPyAkkaModel): Route =
         pathPrefix("hurricane") {
-            extractRequestContext { ctx =>
-                val valid = UserValidator.validateUser(ctx.request.headers, model)
-                validate(valid.nonEmpty, "Invalid User") {
-                    val userId = valid.get
+            optionalHeaderValueByName("user-id") { userIdHeader =>
+                val userId: Option[Int] = Try(userIdHeader.get.toInt).toOption
+                authorize(model.validateUser(userId).nonEmpty) {
                     pathEndOrSingleSlash {
                         get {
                             complete("hello hurricane")
@@ -31,7 +31,7 @@ object HurricaneRoutes {
                                     json =>
                                         val parsedJson = JsonParser(json).asJsObject
                                         val catalogName: String = parsedJson.fields("catalogName").convertTo[String]
-                                        model.hurricaneModel.createCatalog(userId, catalogName)
+                                        model.hurricaneModel.createCatalog(userId.get, catalogName)
                                         complete("success")
                                 }
                             } ~ delete {
@@ -45,7 +45,7 @@ object HurricaneRoutes {
                                     val catalogName: String = parsedJson.fields("catalogName").convertTo[String]
                                     val eventName: String = parsedJson.fields("eventName").convertTo[String]
 
-                                    model.hurricaneModel.addEventToCatalog(userId, catalogName, eventName)
+                                    model.hurricaneModel.addEventToCatalog(userId.get, catalogName, eventName)
                                     complete("unisys success")
                             }
                         } ~ pathPrefix("remove-event") {
@@ -65,7 +65,7 @@ object HurricaneRoutes {
                                             val unisysUrl: String = parsedJson.fields("unisysUrl").convertTo[String]
 
                                             val unisysFileLines: Seq[String] = fromURL(unisysUrl).mkString.split('\n').toSeq
-                                            model.hurricaneModel.buildFromUnysis(userId, eventName, unisysFileLines)
+                                            model.hurricaneModel.buildFromUnysis(userId.get, eventName, unisysFileLines)
                                             complete("unisys success")
                                     }
                                 }
