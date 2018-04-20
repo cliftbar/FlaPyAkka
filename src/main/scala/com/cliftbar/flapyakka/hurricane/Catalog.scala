@@ -1,16 +1,28 @@
 package com.cliftbar.flapyakka.hurricane
 
 import java.io.{File, FileWriter}
-import java.nio.file.Path
+import java.nio.file.{Files, Path, Paths}
 
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions, ConfigValueFactory}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
+//import scala.collection.mutable
 
 object Catalog {
-    def load(userId: Int, catalogName: String): Unit ={
+    def loadFromSaved(catalogName: String, rootUserDir: String): Option[Catalog] ={
+        val catalogConfPath = Paths.get(rootUserDir, "catalogs", catalogName, catalogName + ".conf")
+        val ret: Option[Catalog] = if (Files.exists(catalogConfPath)) {
+            val confFi = new File(catalogConfPath.toString)
+            val conf = ConfigFactory.parseFile(confFi)
 
+            val catTemp = new Catalog(conf.getString("catalog.name"), conf.getString("catalog.owner"))
+            val eventsTemp: Seq[String] = conf.getStringList("catalog.events").asScala
+            eventsTemp.map(x => catTemp.addEvent(x))
+            Some(catTemp)
+        } else {
+            None
+        }
+        return ret
     }
 
     def getUserCatalogs(catalogPath: Path): Seq[String] = {
@@ -27,13 +39,19 @@ object Catalog {
 }
 
 class Catalog(name: String, username: String) {
-    val events = new mutable.HashMap[String, String]
+    private var events: Set[String] = Set[String]()
 
-    def getNames() = {}
+    def getNames(): Seq[String] = {
+        this.events.toSeq
+    }
 
-    def addEvent() = {}
+    def addEvent(eventName: String) = {
+        this.events = this.events + eventName
+    }
 
-    def removeEvent() = {}
+    def removeEvent(eventName: String) = {
+        this.events = this.events - eventName
+    }
 
     def loadFromFile(fileUri: String) {}
 
@@ -46,8 +64,9 @@ class Catalog(name: String, username: String) {
         val fi = new File(userDir + this.name + ".conf")
         fi.getParentFile.mkdirs()
 
-        val eventNames = events.keys.asJava
+        val eventNames = events.asJava
         var conf = ConfigFactory.empty
+        conf = conf.withValue("catalog.owner", ConfigValueFactory.fromAnyRef(this.username))
         conf = conf.withValue("catalog.name", ConfigValueFactory.fromAnyRef(this.name))
         conf = conf.withValue("catalog.events", ConfigValueFactory.fromIterable(eventNames))
 

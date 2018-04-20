@@ -3,6 +3,8 @@ package com.cliftbar.flapyakka.hurricane
 import java.time._
 import java.time.format.DateTimeFormatter
 
+import spray.json._
+
 class TrackPoint(
     val timestamp: LocalDateTime
     ,var latY_deg: Double
@@ -23,7 +25,24 @@ class TrackPoint(
         return (this.latY_deg, this.lonX_deg)
     }
     def pointAsGeojson(){}
-    def pointAsPrintSeq(): Seq[Any] = {
+
+    def pointAsJsonArray(rMax: Int, gwaf: Double): JsArray = {
+        return JsArray(
+            JsString(timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+            ,JsNumber(pointLatLon()._1)
+            ,JsNumber(pointLatLon()._2)
+            ,JsNumber(maxWindSpeed_kts)
+            ,JsNumber(minCentralPressure_mb.getOrElse(Double.NaN))
+            ,JsNumber(forwardSpeed_kts)
+            ,JsNumber(headingToNextPoint.getOrElse(Double.NaN))
+            ,JsBoolean(this.isLandfall)
+            ,JsNumber(sequence)
+            ,JsNumber(rMax)
+            ,JsNumber(gwaf)
+        )
+    }
+
+    def pointAsSeq(): Seq[Any] = {
         return Seq(
             timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             ,pointLatLon()._1
